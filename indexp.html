@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning de Livraison Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Animation: Flux de route dynamiques */
+        @keyframes routeFlow {
+            0% { transform: translate(-30%, -30%) rotate(-45deg); opacity: 0.1; }
+            50% { opacity: 0.25; }
+            100% { transform: translate(30%, 30%) rotate(-45deg); opacity: 0.1; }
+        }
+        @keyframes pulseParticle {
+            0%, 100% { transform: scale(0.8); opacity: 0.2; }
+            50% { transform: scale(1.2); opacity: 0.5; }
+        }
+        .route-line {
+            position: absolute;
+            width: 200%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3b82f6, #64748b, transparent);
+            animation: routeFlow 8s infinite linear;
+        }
+        .animated-dot {
+            position: absolute;
+            background: #cbd5e1;
+            border-radius: 50%;
+            animation: pulseParticle 4s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans relative antialiased min-h-screen select-none overflow-x-hidden">
+
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0 bg-slate-50">
+        <div class="route-line" style="top: 20%; animation-delay: 0s;"></div>
+        <div class="route-line" style="top: 50%; animation-delay: 3s; animation-duration: 12s;"></div>
+        <div class="route-line" style="top: 80%; animation-delay: 1.5s; animation-duration: 10s;"></div>
+        
+        <div class="animated-dot w-4 h-4" style="top: 15%; left: 20%; animation-delay: 0s;"></div>
+        <div class="animated-dot w-6 h-6" style="top: 65%; left: 75%; animation-delay: 1s;"></div>
+        <div class="animated-dot w-3 h-3" style="top: 40%; left: 45%; animation-delay: 2s;"></div>
+    </div>
+
+    <div class="relative z-10 w-full min-h-screen flex flex-col justify-between">
+
+        <div id="view-welcome" class="view-section flex flex-col items-center justify-center min-h-screen p-6 text-center">
+            <div class="mb-6 bg-white shadow-sm p-5 rounded-3xl border border-slate-200/60">
+                <i data-lucide="route" class="w-10 h-10 text-slate-800"></i>
+            </div>
+            <h1 class="text-3xl font-black text-slate-900 mb-1 tracking-tight">LOGISTIQUE JOYEUSE</h1>
+            <p class="text-slate-400 mb-8 text-sm font-medium">Suivi de planning et gestion d'équipe</p>
+
+            <div class="grid grid-cols-1 gap-3 w-full max-w-xs">
+                <button onclick="openJefeLogin()" class="bg-white hover:bg-slate-100 text-slate-900 font-bold py-4 px-5 rounded-2xl shadow-sm border border-slate-200/80 flex items-center justify-between transition-all active:scale-95 cursor-pointer">
+                    <span class="text-sm flex items-center gap-3 text-slate-700"><i data-lucide="shield-check" class="w-5 h-5 text-slate-500"></i> Espace Manager</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                </button>
+                
+                <button onclick="switchView('view-trabajador-login')" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 px-5 rounded-2xl shadow-md flex items-center justify-between transition-all active:scale-95 cursor-pointer">
+                    <span class="text-sm flex items-center gap-3"><i data-lucide="truck" class="w-5 h-5 opacity-80"></i> Espace Livreur</span>
+                    <i data-lucide="chevron-right" class="w-4 h-4 opacity-60"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="view-jefe-login" class="view-section hidden flex-col items-center justify-center min-h-screen p-4">
+            <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-200">
+                <h2 class="text-xl font-bold text-slate-900 mb-1">Accès Manager</h2>
+                <p class="text-xs text-slate-400 mb-6">Entrez le code secret d'administration</p>
+                
+                <input type="password" id="jefe-pin" placeholder="••••" class="w-full p-3 border-2 border-slate-200 rounded-xl text-center text-xl mb-4 tracking-widest focus:border-slate-900 focus:outline-none bg-white">
+                <p id="jefe-login-error" class="text-red-500 text-xs font-semibold mb-4 hidden">Code incorrect. Veuillez réessayer.</p>
+                
+                <div class="flex gap-2">
+                    <button onclick="switchView('view-welcome')" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 p-3 rounded-xl font-bold text-sm transition-all active:scale-95 cursor-pointer">Retour</button>
+                    <button onclick="checkJefePin()" class="w-1/2 bg-slate-900 hover:bg-slate-800 text-white p-3 rounded-xl font-bold text-sm transition-all active:scale-95 cursor-pointer">Entrer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-trabajador-login" class="view-section hidden flex-col items-center justify-center min-h-screen p-4">
+            <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-200">
+                <h2 class="text-xl font-bold text-slate-900 mb-1">Validation Livreur</h2>
+                <p class="text-xs text-slate-400 mb-4">Sélectionnez votre nom et entrez votre code</p>
+
+                <select id="select-trabajador-login" class="w-full p-3 border-2 border-slate-200 rounded-xl text-sm mb-3 bg-white focus:border-slate-900 focus:outline-none">
+                    </select>
+
+                <input type="password" id="trabajador-pin-input" placeholder="Code secret individuel" class="w-full p-3 border-2 border-slate-200 rounded-xl text-center text-sm mb-4 focus:border-slate-900 focus:outline-none bg-white">
+                <p id="trabajador-login-error" class="text-red-500 text-xs font-semibold mb-4 hidden">Code d'accès incorrect.</p>
+                
+                <div class="flex gap-2">
+                    <button onclick="switchView('view-welcome')" class="w-1/2 bg-slate-100 hover:bg-slate-200 text-slate-700 p-3 rounded-xl font-bold text-sm transition-all active:scale-95 cursor-pointer">Retour</button>
+                    <button onclick="enterTrabajador()" class="w-1/2 bg-slate-900 hover:bg-slate-800 text-white p-3 rounded-xl font-bold text-sm transition-all active:scale-95 cursor-pointer">Vérifier</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-jefe-dashboard" class="view-section hidden p-4 max-w-5xl mx-auto w-full">
+            <header class="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-2xl shadow-sm mb-6 gap-4 border border-slate-200">
+                <h1 class="text-md font-bold text-slate-900 flex items-center gap-2"><i data-lucide="sliders" class="w-4 h-4 text-slate-500"></i> Panneau Manager</h1>
+                <div class="flex gap-2 w-full sm:w-auto">
+                    <button onclick="toggleConfigPin()" class="flex-1 sm:flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"><i data-lucide="key" class="w-3.5 h-3.5"></i> Code PIN Manager</button>
+                    <button onclick="switchView('view-welcome')" class="flex-1 sm:flex-none bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-xl text-xs font-bold cursor-pointer">Déconnexion</button>
+                </div>
+            </header>
+
+            <div id="pin-config-box" class="hidden bg-white p-4 rounded-2xl border border-slate-200 mb-6 shadow-inner">
+                <label class="block font-bold text-slate-700 text-xs mb-1">Modifier le PIN d'accès Manager :</label>
+                <div class="flex gap-2 max-w-xs">
+                    <input type="text" id="current-pin-input" class="p-2 border rounded-lg text-center font-bold text-sm w-24 bg-white" value="1234">
+                    <button onclick="saveNewPin()" class="bg-slate-900 text-white px-3 py-2 rounded-lg text-xs font-bold cursor-pointer">Enregistrer</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6">
+                <h2 class="font-bold text-sm text-slate-900 mb-3">Ajouter un nouveau livreur</h2>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="new-worker-name" placeholder="Nom et prénom" class="flex-1 p-2.5 border rounded-xl bg-white text-sm focus:outline-none focus:border-slate-900">
+                    <input type="text" id="new-worker-pin" placeholder="Code PIN (Ex: 5566)" class="w-full sm:w-48 p-2.5 border rounded-xl bg-white text-sm text-center focus:outline-none focus:border-slate-900 font-mono tracking-wider">
+                    <button onclick="addTrabajador()" class="bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs py-3 px-5 rounded-xl shadow transition-all cursor-pointer">Ajouter</button>
+                </div>
+            </div>
+
+            <div class="space-y-4 mb-10" id="jefe-workers-list">
+                </div>
+        </div>
+
+        <div id="view-trabajador-dashboard" class="view-section hidden p-4 max-w-4xl mx-auto w-full">
+            <header class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm mb-6 border border-slate-200">
+                <div>
+                    <h1 id="txt-nombre-trabajador" class="text-base font-bold text-slate-900">Bonjour</h1>
+                    <p class="text-[10px] text-emerald-600 font-bold flex items-center gap-1 mt-0.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Synchronisation active</p>
+                </div>
+                <button onclick="switchView('view-welcome')" class="bg-slate-900 text-white px-3 py-2 rounded-xl text-xs font-bold cursor-pointer">Quitter</button>
+            </header>
+
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
+                <h2 class="text-sm font-bold mb-4 text-slate-700 text-center">📅 Votre Planning Hebdomadaire</h2>
+                <div id="trabajador-calendar-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+                    </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // DATOS DE CONEXIÓN PROPORCIONADOS POR EL USUARIO
+        const SUPABASE_URL = "https://obnldzicossdlydqrhoo.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_iLBcwy6Ek6M9UE7iDyujAw_ecW5kXQR";
+        
+        let clientSupabase = null;
+        
+        try {
+            if(SUPABASE_URL && !SUPABASE_URL.includes("TU_PROYECTO") && typeof supabase !== 'undefined') {
+                clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch(e) {
+            console.log("Mode local autonome.");
+        }
+
+        let db_pin = "1234";
+        let db_trabajadores = [];
+        let db_planificacion = {}; 
+
+        const diasSemanaActual = [
+            { fecha: "2026-06-01", label: "Lun 01/06" },
+            { fecha: "2026-06-02", label: "Mar 02/06" },
+            { fecha: "2026-06-03", label: "Mer 03/06" },
+            { fecha: "2026-06-04", label: "Jeu 04/06" },
+            { fecha: "2026-06-05", label: "Ven 05/06" },
+            { fecha: "2026-06-06", label: "Sam 06/06" },
+            { fecha: "2026-06-07", label: "Dim 07/06" }
+        ];
+
+        let trabajadorActivoId = null;
+
+        window.onload = function() {
+            lucide.createIcons();
+            initRealtime();
+            loadData();
+        }
+
+        function switchView(viewId) {
+            const sections = document.querySelectorAll('.view-section');
+            sections.forEach(s => {
+                s.classList.add('hidden');
+                s.classList.remove('flex');
+            });
+
+            const current = document.getElementById(viewId);
+            if(current) {
+                current.classList.remove('hidden');
+                if(viewId === 'view-welcome' || viewId === 'view-jefe-login' || viewId === 'view-trabajador-login') {
+                    current.classList.add('flex');
+                }
+            }
+        }
+
+        function openJefeLogin() {
+            document.getElementById('jefe-pin').value = "";
+            document.getElementById('jefe-login-error').classList.add('hidden');
+            switchView('view-jefe-login');
+        }
+
+        function checkJefePin() {
+            const input = document.getElementById('jefe-pin').value;
+            if(input === db_pin) {
+                switchView('view-jefe-dashboard');
+            } else {
+                document.getElementById('jefe-login-error').classList.remove('hidden');
+            }
+        }
+
+        function toggleConfigPin() {
+            const box = document.getElementById('pin-config-box');
+            box.classList.toggle('hidden');
+            document.getElementById('current-pin-input').value = db_pin;
+        }
+
+        function saveNewPin() {
+            const nuevo = document.getElementById('current-pin-input').value.trim();
+            if(nuevo) {
+                db_pin = nuevo;
+                alert("Code PIN Manager mis à jour !");
+                saveToSupabase('config', { id: 'jefe_pin', value: db_pin });
+            }
+        }
+
+        function addTrabajador() {
+            const nameInput = document.getElementById('new-worker-name');
+            const pinInput = document.getElementById('new-worker-pin');
+            
+            const name = nameInput.value.trim();
+            const chosenPin = pinInput.value.trim() || "1234";
+
+            if(!name) return;
+
+            const nuevo = { id: Date.now(), nombre: name, pin: chosenPin };
+            db_trabajadores.push(nuevo);
+            
+            nameInput.value = "";
+            pinInput.value = "";
+            
+            renderAll();
+            saveToSupabase('trabajadores', nuevo);
+        }
+
+        function renderAll() {
+            const selectLog = document.getElementById('select-trabajador-login');
+            if(selectLog) {
+                selectLog.innerHTML = db_trabajadores.map(t => `<option value="${t.id}">${t.nombre}</option>`).join('');
+            }
+
+            const jefeList = document.getElementById('jefe-workers-list');
+            if(!jefeList) return;
+            jefeList.innerHTML = "";
+
+            db_trabajadores.forEach(w => {
+                let calendarioHtml = "";
+                
+                diasSemanaActual.forEach(d => {
+                    const key = `${w.id}-${d.fecha}`;
+                    const dataDia = db_planificacion[key] || { activo: false, nota: "" };
+                    
+                    calendarioHtml += `
+                        <div class="bg-slate-50 p-2 border border-slate-200 rounded-xl flex flex-col justify-between text-xs">
+                            <span class="font-bold text-center block mb-1 text-slate-400 text-[10px]">${d.label}</span>
+                            <button onclick="toggleDay(${w.id}, '${d.fecha}')" class="w-full py-1 rounded font-bold text-[9px] mb-1 transition-all cursor-pointer ${dataDia.activo ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-500'}">
+                                ${dataDia.activo ? 'TRAVAILLE' : 'REPOS'}
+                            </button>
+                            <input type="text" placeholder="..." value="${dataDia.nota || ''}" 
+                                   onchange="updateNota(${w.id}, '${d.fecha}', this.value)"
+                                   class="w-full p-1 border rounded text-[10px] focus:outline-none bg-white text-center">
+                        </div>
+                    `;
+                });
+
+                let historialHtml = "";
+                getDiasHistorial().forEach(fechaH => {
+                    const key = `${w.id}-${fechaH}`;
+                    const dataDia = db_planificacion[key];
+                    if (dataDia && (dataDia.activo || dataDia.nota)) {
+                        historialHtml += `<div class="bg-slate-100 p-1 px-2 rounded border inline-block text-[10px] mr-1 mb-1 text-slate-500"><b>${fechaH.split('-')[2]}/05:</b> ${dataDia.activo ? 'Travail' : 'Repos'} - <i>${dataDia.nota || ''}</i></div>`;
+                    }
+                });
+                if(!historialHtml) historialHtml = `<span class="text-xs text-slate-400">Aucune archive en mai.</span>`;
+
+                jefeList.innerHTML += `
+                    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-800">👤 ${w.nombre}</h3>
+                                <p class="text-[10px] text-slate-400">Code PIN de connexion : <span class="font-mono font-bold text-slate-700">${w.pin || '1234'}</span></p>
+                            </div>
+                            <button onclick="eliminarTrabajador(${w.id})" class="text-slate-400 text-xs hover:text-red-500 transition-colors cursor-pointer">Supprimer</button>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5 mb-3">
+                            ${calendarioHtml}
+                        </div>
+                        <div class="p-2 bg-slate-50 rounded-xl border border-dashed">
+                            <span class="text-[10px] font-bold text-slate-400 block mb-1">Historique Complet (Depuis le 01/05) :</span>
+                            <div class="flex flex-wrap">${historialHtml}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            if(trabajadorActivoId) {
+                renderPanelTrabajador();
+            }
+            lucide.createIcons();
+        }
+
+        function toggleDay(workerId, fecha) {
+            const key = `${workerId}-${fecha}`;
+            if(!db_planificacion[key]) db_planificacion[key] = { activo: false, nota: "" };
+            db_planificacion[key].activo = !db_planificacion[key].activo;
+            renderAll();
+            saveToSupabase('planificacion', { id: key, ...db_planificacion[key] });
+        }
+
+        function updateNota(workerId, fecha, texto) {
+            const key = `${workerId}-${fecha}`;
+            if(!db_planificacion[key]) db_planificacion[key] = { activo: false, nota: "" };
+            db_planificacion[key].nota = texto;
+            saveToSupabase('planificacion', { id: key, ...db_planificacion[key] });
+        }
+
+        async function eliminarTrabajador(id) {
+            db_trabajadores = db_trabajadores.filter(t => t.id !== id);
+            renderAll();
+            if(clientSupabase) {
+                await clientSupabase.from('trabajadores').delete().eq('id', id);
+            }
+        }
+
+        function enterTrabajador() {
+            const select = document.getElementById('select-trabajador-login');
+            const inputPin = document.getElementById('trabajador-pin-input').value;
+            const errorTxt = document.getElementById('trabajador-login-error');
+
+            if(!select || !select.value) return;
+
+            const targetId = parseInt(select.value);
+            const tObj = db_trabajadores.find(t => t.id === targetId);
+
+            if (!tObj || inputPin !== tObj.pin) {
+                errorTxt.classList.remove('hidden');
+                return;
+            }
+
+            errorTxt.classList.add('hidden');
+            trabajadorActivoId = targetId;
+
+            document.getElementById('txt-nombre-trabajador').innerText = `🚚 ${tObj.nombre}`;
+            document.getElementById('trabajador-pin-input').value = ""; 
+            switchView('view-trabajador-dashboard');
+            renderPanelTrabajador();
+        }
+
+        function renderPanelTrabajador() {
+            const grid = document.getElementById('trabajador-calendar-grid');
+            if(!grid) return;
+            grid.innerHTML = "";
+
+            diasSemanaActual.forEach(d => {
+                const key = `${trabajadorActivoId}-${d.fecha}`;
+                const dataDia = db_planificacion[key] || { activo: false, nota: "" };
+
+                grid.innerHTML += `
+                    <div class="p-3 rounded-2xl border text-center flex flex-col justify-between h-24 ${dataDia.activo ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-800 border-slate-200'}">
+                        <span class="text-[10px] uppercase font-bold opacity-60">${d.label}</span>
+                        <span class="text-xs font-bold my-1">${dataDia.activo ? 'LIVRAISON' : 'REPOS'}</span>
+                        <p class="text-[10px] bg-white text-slate-700 p-0.5 rounded truncate ${dataDia.activo ? 'text-slate-900':''}">
+                            ${dataDia.nota || '-'}
+                        </p>
+                    </div>
+                `;
+            });
+        }
+
+        function getDiasHistorial() {
+            let lista = [];
+            for(let i=1; i<=31; i++) {
+                let diaStr = i < 10 ? '0'+i : i;
+                lista.push(`2026-05-${diaStr}`);
+            }
+            return lista;
+        }
+
+        // CONTROLADORES DE ESCUCHA SUPABASE REALTIME
+        function initRealtime() {
+            if (!clientSupabase) return;
+            clientSupabase
+                .channel('schema-db-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'planificacion' }, payload => {
+                    if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+                        db_planificacion[payload.new.id] = {
+                            activo: payload.new.activo,
+                            nota: payload.new.nota
+                        };
+                    }
+                    renderAll(); 
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'trabajadores' }, () => {
+                    loadData();
+                })
+                .subscribe();
+        }
+
+        async function loadData() {
+            if (!clientSupabase) {
+                renderAll();
+                return;
+            }
+            try {
+                let { data: configJefe } = await clientSupabase.from('config').select('*').eq('id', 'jefe_pin').single();
+                if (configJefe) db_pin = configJefe.value;
+
+                let { data: trabajadores } = await clientSupabase.from('trabajadores').select('*');
+                if (trabajadores) db_trabajadores = trabajadores;
+
+                let { data: planificacion } = await clientSupabase.from('planificacion').select('*');
+                if (planificacion) {
+                    db_planificacion = {};
+                    planificacion.forEach(p => {
+                        db_planificacion[p.id] = { activo: p.activo, nota: p.nota };
+                    });
+                }
+                renderAll();
+            } catch(e) { console.log("Erreur de chargement"); }
+        }
+
+        async function saveToSupabase(tabla, objeto) {
+            if (!clientSupabase) return;
+            try { await clientSupabase.from(tabla).upsert(objeto); } catch(e){}
+        }
+    </script>
+</body>
+</html>
