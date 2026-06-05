@@ -4,49 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planning de Livraison Pro</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Icones Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Animation: Flux de route dynamiques */
-        @keyframes routeFlow {
-            0% { transform: translate(-30%, -30%) rotate(-45deg); opacity: 0.1; }
-            50% { opacity: 0.25; }
-            100% { transform: translate(30%, 30%) rotate(-45deg); opacity: 0.1; }
+        /* ANIMATION OPTION 3: Gradiente Dinámico Suave y Profesional */
+        @keyframes gradientFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
-        @keyframes pulseParticle {
-            0%, 100% { transform: scale(0.8); opacity: 0.2; }
-            50% { transform: scale(1.2); opacity: 0.5; }
-        }
-        .route-line {
-            position: absolute;
-            width: 200%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, #3b82f6, #64748b, transparent);
-            animation: routeFlow 8s infinite linear;
-        }
-        .animated-dot {
-            position: absolute;
-            background: #cbd5e1;
-            border-radius: 50%;
-            animation: pulseParticle 4s infinite ease-in-out;
+        .bg-animated-gradient {
+            background: linear-gradient(-45deg, #f8fafc, #f1f5f9, #e2e8f0, #f8fafc);
+            background-size: 400% 400%;
+            animation: gradientFlow 15s ease infinite;
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans relative antialiased min-h-screen select-none overflow-x-hidden">
+<body class="bg-animated-gradient text-slate-800 font-sans relative antialiased min-h-screen select-none overflow-x-hidden">
 
-    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0 bg-slate-50">
-        <div class="route-line" style="top: 20%; animation-delay: 0s;"></div>
-        <div class="route-line" style="top: 50%; animation-delay: 3s; animation-duration: 12s;"></div>
-        <div class="route-line" style="top: 80%; animation-delay: 1.5s; animation-duration: 10s;"></div>
-        
-        <div class="animated-dot w-4 h-4" style="top: 15%; left: 20%; animation-delay: 0s;"></div>
-        <div class="animated-dot w-6 h-6" style="top: 65%; left: 75%; animation-delay: 1s;"></div>
-        <div class="animated-dot w-3 h-3" style="top: 40%; left: 45%; animation-delay: 2s;"></div>
-    </div>
-
+    <!-- CONTENU PRINCIPAL -->
     <div class="relative z-10 w-full min-h-screen flex flex-col justify-between">
 
+        <!-- ACCUEIL / BIENVENUE -->
         <div id="view-welcome" class="view-section flex flex-col items-center justify-center min-h-screen p-6 text-center">
             <div class="mb-6 bg-white shadow-sm p-5 rounded-3xl border border-slate-200/60">
                 <i data-lucide="route" class="w-10 h-10 text-slate-800"></i>
@@ -67,6 +50,7 @@
             </div>
         </div>
 
+        <!-- LOGIN MANAGER -->
         <div id="view-jefe-login" class="view-section hidden flex-col items-center justify-center min-h-screen p-4">
             <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-200">
                 <h2 class="text-xl font-bold text-slate-900 mb-1">Accès Manager</h2>
@@ -82,13 +66,15 @@
             </div>
         </div>
 
+        <!-- LOGIN LIVREUR -->
         <div id="view-trabajador-login" class="view-section hidden flex-col items-center justify-center min-h-screen p-4">
             <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm text-center border border-slate-200">
                 <h2 class="text-xl font-bold text-slate-900 mb-1">Validation Livreur</h2>
                 <p class="text-xs text-slate-400 mb-4">Sélectionnez votre nom et entrez votre code</p>
 
                 <select id="select-trabajador-login" class="w-full p-3 border-2 border-slate-200 rounded-xl text-sm mb-3 bg-white focus:border-slate-900 focus:outline-none">
-                    </select>
+                    <!-- Dynamique -->
+                </select>
 
                 <input type="password" id="trabajador-pin-input" placeholder="Code secret individuel" class="w-full p-3 border-2 border-slate-200 rounded-xl text-center text-sm mb-4 focus:border-slate-900 focus:outline-none bg-white">
                 <p id="trabajador-login-error" class="text-red-500 text-xs font-semibold mb-4 hidden">Code d'accès incorrect.</p>
@@ -100,6 +86,7 @@
             </div>
         </div>
 
+        <!-- TABLEAU DE BORD MANAGER -->
         <div id="view-jefe-dashboard" class="view-section hidden p-4 max-w-5xl mx-auto w-full">
             <header class="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-2xl shadow-sm mb-6 gap-4 border border-slate-200">
                 <h1 class="text-md font-bold text-slate-900 flex items-center gap-2"><i data-lucide="sliders" class="w-4 h-4 text-slate-500"></i> Panneau Manager</h1>
@@ -109,6 +96,7 @@
                 </div>
             </header>
 
+            <!-- Config PIN Manager -->
             <div id="pin-config-box" class="hidden bg-white p-4 rounded-2xl border border-slate-200 mb-6 shadow-inner">
                 <label class="block font-bold text-slate-700 text-xs mb-1">Modifier le PIN d'accès Manager :</label>
                 <div class="flex gap-2 max-w-xs">
@@ -117,6 +105,7 @@
                 </div>
             </div>
 
+            <!-- Ajouter Livreur -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6">
                 <h2 class="font-bold text-sm text-slate-900 mb-3">Ajouter un nouveau livreur</h2>
                 <div class="flex flex-col sm:flex-row gap-2">
@@ -126,10 +115,13 @@
                 </div>
             </div>
 
+            <!-- Liste des livreurs -->
             <div class="space-y-4 mb-10" id="jefe-workers-list">
-                </div>
+                <!-- Dynamique -->
+            </div>
         </div>
 
+        <!-- ESPACE LIVREUR -->
         <div id="view-trabajador-dashboard" class="view-section hidden p-4 max-w-4xl mx-auto w-full">
             <header class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm mb-6 border border-slate-200">
                 <div>
@@ -142,26 +134,25 @@
             <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
                 <h2 class="text-sm font-bold mb-4 text-slate-700 text-center">📅 Votre Planning Hebdomadaire</h2>
                 <div id="trabajador-calendar-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
-                    </div>
+                    <!-- Dynamique -->
+                </div>
             </div>
         </div>
 
     </div>
 
+    <!-- SCRIPT DE LOGIQUE APPLICATIVE -->
     <script>
-        // DATOS DE CONEXIÓN PROPORCIONADOS POR EL USUARIO
         const SUPABASE_URL = "https://obnldzicossdlydqrhoo.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_iLBcwy6Ek6M9UE7iDyujAw_ecW5kXQR";
         
         let clientSupabase = null;
         
         try {
-            if(SUPABASE_URL && !SUPABASE_URL.includes("TU_PROYECTO") && typeof supabase !== 'undefined') {
+            if(SUPABASE_URL && typeof supabase !== 'undefined') {
                 clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             }
-        } catch(e) {
-            console.log("Mode local autonome.");
-        }
+        } catch(e) { console.log("Erreur client"); }
 
         let db_pin = "1234";
         let db_trabajadores = [];
@@ -280,15 +271,26 @@
                     `;
                 });
 
+                // REFACTOR: Historial Inteligente Real que lee de la base de datos sin importar el mes
                 let historialHtml = "";
-                getDiasHistorial().forEach(fechaH => {
-                    const key = `${w.id}-${fechaH}`;
-                    const dataDia = db_planificacion[key];
-                    if (dataDia && (dataDia.activo || dataDia.nota)) {
-                        historialHtml += `<div class="bg-slate-100 p-1 px-2 rounded border inline-block text-[10px] mr-1 mb-1 text-slate-500"><b>${fechaH.split('-')[2]}/05:</b> ${dataDia.activo ? 'Travail' : 'Repos'} - <i>${dataDia.nota || ''}</i></div>`;
+                Object.keys(db_planificacion).forEach(key => {
+                    if (key.startsWith(`${w.id}-`)) {
+                        const fechaCompleta = key.replace(`${w.id}-`, "");
+                        const dataDia = db_planificacion[key];
+                        
+                        if (dataDia && (dataDia.activo || dataDia.nota)) {
+                            const [annee, mois, jour] = fechaCompleta.split('-');
+                            historialHtml += `
+                                <div class="bg-slate-100 p-1 px-2 rounded border inline-block text-[10px] mr-1 mb-1 text-slate-600 font-medium">
+                                    <b>${jour}/${mois} :</b> ${dataDia.activo ? '💼 Travail' : '💤 Repos'} ${dataDia.nota ? `- <i>"${dataDia.nota}"</i>` : ''}
+                                </div>`;
+                        }
                     }
                 });
-                if(!historialHtml) historialHtml = `<span class="text-xs text-slate-400">Aucune archive en mai.</span>`;
+                
+                if(!historialHtml) {
+                    historialHtml = `<span class="text-xs text-slate-400 font-medium">Aucun jour enregistré dans l'historique pour le moment.</span>`;
+                }
 
                 jefeList.innerHTML += `
                     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
@@ -302,9 +304,9 @@
                         <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5 mb-3">
                             ${calendarioHtml}
                         </div>
-                        <div class="p-2 bg-slate-50 rounded-xl border border-dashed">
-                            <span class="text-[10px] font-bold text-slate-400 block mb-1">Historique Complet (Depuis le 01/05) :</span>
-                            <div class="flex flex-wrap">${historialHtml}</div>
+                        <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/60">
+                            <span class="text-[10px] font-bold text-slate-400 block mb-1.5 uppercase tracking-wider">📋 Archives et Historique Global :</span>
+                            <div class="flex flex-wrap gap-1">${historialHtml}</div>
                         </div>
                     </div>
                 `;
@@ -328,6 +330,7 @@
             const key = `${workerId}-${fecha}`;
             if(!db_planificacion[key]) db_planificacion[key] = { activo: false, nota: "" };
             db_planificacion[key].nota = texto;
+            renderAll();
             saveToSupabase('planificacion', { id: key, ...db_planificacion[key] });
         }
 
@@ -384,16 +387,6 @@
             });
         }
 
-        function getDiasHistorial() {
-            let lista = [];
-            for(let i=1; i<=31; i++) {
-                let diaStr = i < 10 ? '0'+i : i;
-                lista.push(`2026-05-${diaStr}`);
-            }
-            return lista;
-        }
-
-        // CONTROLADORES DE ESCUCHA SUPABASE REALTIME
         function initRealtime() {
             if (!clientSupabase) return;
             clientSupabase
